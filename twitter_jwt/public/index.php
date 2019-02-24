@@ -68,6 +68,21 @@ try{
       return $session;
   });
 
+  $di->set(
+    "crypt",
+    function () {
+        $crypt = new Crypt();
+
+        // Set a global encryption key
+        $crypt->setKey(
+            "%31.1e$i86e$f!8jz"
+        );
+
+        return $crypt;
+    },
+    true
+);
+
   $application = new \Phalcon\Mvc\Application($di);
   echo $application->handle()->getContent();
 } catch(\Phalcon\Exception $e) {

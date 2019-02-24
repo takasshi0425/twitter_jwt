@@ -5,7 +5,7 @@ define("Callback", "http://localhost/twitter_jwt/index/callback");
 require "twitteroauth-master/autoload.php";
 use Abraham\TwitterOAuth\TwitterOAuth;
 use Phalcon\Http\Response;
-use \Firebase\JWT\JWT;
+use Phalcon\Crypt;
 
 class IndexController extends ControllerBase
 {
@@ -60,16 +60,36 @@ class IndexController extends ControllerBase
     $user_connection = new TwitterOAuth(Consumer_Key, Consumer_Secret, $this->session->get("access_oauth"), $this->session->get("access_secret"));
     $user_info = $user_connection->get('account/verify_credentials');
 
+    //JWT生成
     $current_time = time();
     $expiry = $current_time + (30 * 24 * 60 * 60); //有効期限として30日後を指定
+
     $claims = array(
       'iat' => $current_time,
       'exp' => $expiry,
       'user_id' => $user_info->id,
       'foo' => 'bar'
     );
+    $header = array(
+      'alg' => "RS256",
+      'typ' => "JWT"
+    );
+    $claims = implode(",", $claims);  //配列を文字列化
+    $header = implode(",", $header);
 
-    $jwt = JWT::encode($claims, 'RS256');
+    $crypt = new Crypt();
+
+    $base64_key  = "N7z5KNH9CXCQ";
+    $claims = $crypt->encryptBase64($claims, $base64_key);
+    $header = $crypt->encryptBase64($header, $base64_key);
+
+    $key = "krQkZVTL7J6f";
+    $text = $claims.$header;
+
+    $secret = $crypt->encrypt($text,$key);
+    $jwt = $claims.$header.$secret;
+    echo $jwt;
+
 
     //適当にユーザ情報を取得
     $id = $user_info->id;
@@ -79,22 +99,22 @@ class IndexController extends ControllerBase
     $text = $user_info->status->text;
 
 //DBへの保存　(検索->判別->挿入or更新)
-    $phql = 'SELECT * FROM Twitter\Users WHERE twitter_id LIKE :twitter_id: ORDER BY twitter_id';
+    $phql = 'SELECT * FROM Twitter\Users WHERE twitter_id LIKE :id: ORDER BY Twitter\Users.twitter_id';
 
     $users = $this->modelsManager->executeQuery(
       $phql,
       [
-        'twitter_id' => $id
+        'id' => $id
       ]
     );
 
     if($users->twitter_id==NULL){ //ここでエラー　Notice: Undefined property: Phalcon\Mvc\Model\Resultset\Simple::$twitter_id
-      $phql = 'INSERT INTO Twitter\Users (twitter_id,name, screen_name, text) VALUES (:twitter_id:,:name:,:screen_name:,:text:)';
+      $phql = 'INSERT INTO Twitter\Users (twitter_id,name, screen_name, text) VALUES (:id:,:name:,:screen_name:,:text:)';
 
       $status = $this->modelsManager->executeQuery(
         $phql,
         [
-          'twitter_id'  => $id,
+          'id'  => $id,
           'name'   => $name,
           'screen_name' => $screen_name,
           'text'  => $text,
@@ -135,10 +155,6 @@ class IndexController extends ControllerBase
     $this->session->set("text","$text");
     $this->session->set("profile_image_url_https","$profile_image_url_https");
 
-    echo json_encode(array(
-      'message' => 'Success.',
-      'jwt' => $jwt
-    ));
     echo "<p>ID：". $this->session->get("id") . "</p>";
     echo "<p>名前：". $this->session->get("name") . "</p>";
     echo "<p>スクリーン名：". $this->session->get("screen_name") . "</p>";
