@@ -84,10 +84,10 @@ class IndexController extends ControllerBase
     $header = $crypt->encryptBase64($header, $base64_key);
 
     $key = "krQkZVTL7J6f";
-    $text = $claims.$header;
+    $text = "$claims.$header";
 
     $secret = $crypt->encrypt($text,$key);
-    $jwt = $claims.$header.$secret;
+    $jwt = "$claims.$header.$secret";
     echo $jwt;
 
 
@@ -98,7 +98,33 @@ class IndexController extends ControllerBase
     $profile_image_url_https = $user_info->profile_image_url_https;
     $text = $user_info->status->text;
 
-//DBへの保存　(検索->判別->挿入or更新)
+    //JWT認証
+    $JWT = explode(".",$jwt);
+    $claims = $JWT[0];
+    $header = $JWT[1];
+    $secret = $JWT[2];
+    $token = "$claims.$header";
+    $key = "krQkZVTL7J6f";
+    $TOKEN = $crypt->decrypt($secret,$key);
+    echo "</br>";
+    echo "$token";
+    echo "</br>";
+    echo "$TOKEN";
+    if($token==$TOKEN){
+      $claims = $crypt->decryptBase64($claims, $base64_key);
+      $CLAIMS = explode(",", $claims);
+      $current_time = time();
+      $expiry = $CLAIMS[1];
+      if(intval($current_time) >= intval($expiry)){
+        echo "error";
+      }else{
+        echo "ok";
+      }
+    }else{
+      echo "error";
+    }
+
+    //DBへの保存　(検索->判別->挿入or更新)
     $phql = 'SELECT * FROM Twitter\Users WHERE twitter_id LIKE :id: ORDER BY Twitter\Users.twitter_id';
 
     $users = $this->modelsManager->executeQuery(
