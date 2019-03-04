@@ -41,26 +41,8 @@ class IndexController extends ControllerBase
     $user_connection = new TwitterOAuth(Consumer_Key, Consumer_Secret, $access_token['oauth_token'], $access_token['oauth_token_secret']);
     $user_info = $user_connection->get('account/verify_credentials');
 
-    //各値をセッションに入れる
-    $this->session->set("access_oauth",$access_token['oauth_token']);
-    $this->session->set("access_secret",$access_token['oauth_token_secret']);
-    if(isset($user_info)){
-      header('Location: top');
-    }else{
-      header('Location: error');
-    }
 
-    $this->view->disable();
-
-  }
-
-  public function topAction()
-  {
-
-    $user_connection = new TwitterOAuth(Consumer_Key, Consumer_Secret, $this->session->get("access_oauth"), $this->session->get("access_secret"));
-    $user_info = $user_connection->get('account/verify_credentials');
-
-    //JWT生成
+//JWT生成
     $current_time = time();
     $expiry = $current_time + (30 * 24 * 60 * 60); //有効期限として30日後を指定
 
@@ -88,106 +70,39 @@ class IndexController extends ControllerBase
 
     $secret = $crypt->encrypt($text,$key);
     $jwt = "$claims.$header.$secret";
-    echo $jwt;
-
-
-    //適当にユーザ情報を取得
-    $id = $user_info->id;
-    $name = $user_info->name;
-    $screen_name = $user_info->screen_name;
-    $profile_image_url_https = $user_info->profile_image_url_https;
-    $text = $user_info->status->text;
-
-    //JWT認証
-    $JWT = explode(".",$jwt);
-    $claims = $JWT[0];
-    $header = $JWT[1];
-    $secret = $JWT[2];
-    $token = "$claims.$header";
-    $key = "krQkZVTL7J6f";
-    $TOKEN = $crypt->decrypt($secret,$key);
-    echo "</br>";
-    echo "$token";
-    echo "</br>";
-    echo "$TOKEN";
-    if($token==$TOKEN){
-      $claims = $crypt->decryptBase64($claims, $base64_key);
-      $CLAIMS = explode(",", $claims);
-      $current_time = time();
-      $expiry = $CLAIMS[1];
-      if(intval($current_time) >= intval($expiry)){
-        echo "error";
-      }else{
-        echo "ok";
-      }
-    }else{
-      echo "error";
-    }
-
-    //DBへの保存　(検索->判別->挿入or更新)
-    $phql = 'SELECT * FROM Twitter\Users WHERE twitter_id LIKE :id: ORDER BY Twitter\Users.twitter_id';
-
-    $users = $this->modelsManager->executeQuery(
-      $phql,
-      [
-        'id' => $id
-      ]
-    );
-
-    if($users->twitter_id==NULL){ //ここでエラー　Notice: Undefined property: Phalcon\Mvc\Model\Resultset\Simple::$twitter_id
-      $phql = 'INSERT INTO Twitter\Users (twitter_id,name, screen_name, text) VALUES (:id:,:name:,:screen_name:,:text:)';
-
-      $status = $this->modelsManager->executeQuery(
-        $phql,
-        [
-          'id'  => $id,
-          'name'   => $name,
-          'screen_name' => $screen_name,
-          'text'  => $text,
-        ]
-      );
-
-      $image_file = __DIR__;
-      $image_file = str_replace("controllers", "images", $image_file);
-      $image_file = $image_file."/".($status->getModel()->twitter_id).".dat";
-      $image_file = file_put_contents($image_file, $profile_image_url_https);
-    }else{
-      $phql = 'UPDATE Twitter\Users SET name = :name:, screen_name = :screen_name:, text = :text: WHERE twitter_id = :id:';
-
-        $status = $this->modelsManager->executeQuery(
-            $phql,
-            [
-                'id'   => $id,
-                'name' => $name,
-                'screen_name'  => $screen_name,
-                'text'=> $text,
-            ]
-            );
-
-        $image_file = __DIR__;
-        $image_file = str_replace("controllers", "images", $image_file);
-        $image_file = $image_file."/".($id).".dat";
-        $image_file = file_put_contents($image_file, $profile_image_url_https);
-
-    }
-
-//DBへの保存ここまで
 
     //各値をセッションに入れる
+    $this->session->set("access_oauth",$access_token['oauth_token']);
+    $this->session->set("access_secret",$access_token['oauth_token_secret']);
+    $this->session->set("jwt",$jwt);
 
-    $this->session->set("id","$id");
-    $this->session->set("name","$name");
-    $this->session->set("screen_name","$screen_name");
-    $this->session->set("text","$text");
-    $this->session->set("profile_image_url_https","$profile_image_url_https");
+    if(isset($user_info)){
+      header('Location: top');
+    }else{
+      header('Location: error');
+    }
 
-    echo "<p>ID：". $this->session->get("id") . "</p>";
-    echo "<p>名前：". $this->session->get("name") . "</p>";
-    echo "<p>スクリーン名：". $this->session->get("screen_name") . "</p>";
-    echo "<p>最新ツイート：" .$this->session->get("text"). "</p>";
-    echo "<p><img src=".$this->session->get("profile_image_url_https")."></p>";
+    $this->view->disable();
 
-    echo "<p><a href='../image'>プロフィール画像のアップデート</a></p>";
+  }
+
+  public function topAction()
+  {
+
+    $user_connection = new TwitterOAuth(Consumer_Key, Consumer_Secret, $this->session->get("access_oauth"), $this->session->get("access_secret"));
+    $user_info = $user_connection->get('account/verify_credentials');
+    if(!isset($user_info)){
+      header('Location: error');
+    }
+
+    $jwt=$this->session->get("jwt");
+    echo $jwt;
+
+    echo "<p><a href='../get'>全商品の表示</a></p>";
+    echo "<p><a href='../resist'>商品の登録</a></p>";
+    echo "<p><a href='../search'>商品の検索</a></p>";
+    echo "<p><a href='../update'>商品の更新</a></p>";
+    echo "<p><a href='../delete'>商品の削除</a></p>";
     echo "<p><a href='logout'>ログアウト</a></p>";
 
     $this->view->disable();

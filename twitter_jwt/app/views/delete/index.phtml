@@ -1,0 +1,20 @@
+<h2>
+    商品の削除
+</h2>
+
+<?php echo $this->tag->form("delete/clear"); ?>
+    <p>
+        <label for="id">
+          商品ID
+        </label>
+
+        <?php echo $this->tag->textField("id"); ?>
+    </p>
+
+    <p>
+        <?php echo $this->tag->submitButton("削除"); ?>
+    </p>
+
+        <?php echo "<p><a href='http://localhost/twitter_jwt/index/top'>前の画面へ</a></p>"; ?>
+
+</form>

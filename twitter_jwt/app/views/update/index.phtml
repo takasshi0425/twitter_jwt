@@ -1,0 +1,53 @@
+<h2>
+    商品の更新
+</h2>
+
+<?php echo $this->tag->form("update/resist"); ?>
+    <p>
+        <label for="id">
+          商品ID
+        </label>
+
+        <?php echo $this->tag->textField("id"); ?>
+    </p>
+
+    <p>
+        <label for="name">
+            商品名
+        </label>
+
+        <?php echo $this->tag->textField("name"); ?>
+    </p>
+
+    <p>
+        <label for="price">
+            商品価格
+        </label>
+
+        <?php echo $this->tag->textField("price"); ?>
+    </p>
+    <p>
+        <label for="price">
+            商品説明
+        </label>
+
+        <?php echo $this->tag->textField("exp"); ?>
+    </p>
+
+    <p>
+      <label for="price">
+          商品画像
+      </label>
+        <?php echo $this->tag->fileField("image"); ?>
+    </p>
+
+
+
+
+    <p>
+        <?php echo $this->tag->submitButton("更新"); ?>
+    </p>
+
+        <?php echo "<p><a href='http://localhost/twitter_jwt/index/top'>前の画面へ</a></p>"; ?>
+
+</form>

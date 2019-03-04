@@ -1,6 +1,6 @@
 <?php
 
-namespace Twitter;
+namespace Store\Products;
 
 use Phalcon\Mvc\Model;
 use Phalcon\Mvc\Model\Message;
@@ -12,9 +12,9 @@ class Users extends Model
   public function validation()
       {
 
-          if ($this->twitter_id === NULL) {
+          if ($this->price < 0) {
               $this->appendMessage(
-                  new Message("This user is not active")
+                  new Message("Sorry. You can't resist.")
                   );
           }
 

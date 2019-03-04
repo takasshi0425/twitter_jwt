@@ -1,0 +1,20 @@
+<h2>
+    商品の検索
+</h2>
+
+<?php echo $this->tag->form("search/list"); ?>
+
+    <p>
+        <label for="name">
+            商品名
+        </label>
+
+        <?php echo $this->tag->textField("name"); ?>
+
+    <p>
+        <?php echo $this->tag->submitButton("検索"); ?>
+    </p>
+
+        <?php echo "<p><a href='http://localhost/twitter_jwt/index/top'>前の画面へ</a></p>"; ?>
+
+</form>

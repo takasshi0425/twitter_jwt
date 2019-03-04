@@ -22,7 +22,7 @@ try{
 
   $loader->registerNamespaces(
     [
-      'Twitter' => '../app/models/',
+      'Store\Products' => '../app/models/',
     ]
   );
 
@@ -41,7 +41,7 @@ try{
           "host"     => "localhost",
           "username" => "root",
           "password" => "iTdBhF08SBslOjU1",
-          "dbname"   => "twitter",
+          "dbname"   => "product",
           "options" => array(
             PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8'
           )
